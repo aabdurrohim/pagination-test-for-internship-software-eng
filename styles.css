@@ -1,0 +1,41 @@
+table {
+  border: 1px solid black;
+}
+
+th {
+  border: 1px dotted black;
+  height: 40px;
+  padding: 4px;
+  background-color: orange;
+  color: white;
+}
+
+td {
+  border: 1px dotted black;
+  height: 40px;
+  padding: 4px;
+}
+
+button {
+  width: 130px;
+  background-color: orange;
+  color: white;
+  border: 1px solid orange;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+button:hover {
+  color: orangered;
+  font-weight: bold;
+  border: 2px solid orangered;
+}
+
+.right {
+  text-align: right;
+}
+
+.center {
+  text-align: center;
+}
