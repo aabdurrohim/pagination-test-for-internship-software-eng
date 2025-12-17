@@ -1,10 +1,24 @@
 const employeeList = [];
-
 const uiList = [];
 
+// Variabel Kontrol Paginasi
 let currentPage = 1;
+const itemsPerPage = 5;
 
-let itemsPerPage = 5;
+// Fungsi utilitas untuk menghitung usia
+function calculateAge(dtmBirthday, dtmToday) {
+  const today = new Date(dtmToday);
+  const birthDate = new Date(dtmBirthday);
+
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDifference = today.getMonth() - birthDate.getMonth();
+
+  if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 //constructor
 function EmployeeData(szId, szName, dtmBirthday) {
   this.szId = szId == undefined ? "" : szId;
@@ -147,6 +161,7 @@ function UiData(lblNo, lblId, lblName, lblBirthday, lblAge) {
   this.lblBirthday = document.getElementById(lblBirthday);
   this.lblAge = document.getElementById(lblAge);
 }
+
 function InitializeUI() {
   document.getElementById("lblToday").innerHTML = "Today : " + dtmToday.ToString();
   uiList.push(new UiData("lblItemOfNo1", "lblItemOfId1", "lblItemOfName1", "lblItemOfBirthday1", "lblItemOfAge1"));
@@ -154,23 +169,6 @@ function InitializeUI() {
   uiList.push(new UiData("lblItemOfNo3", "lblItemOfId3", "lblItemOfName3", "lblItemOfBirthday3", "lblItemOfAge3"));
   uiList.push(new UiData("lblItemOfNo4", "lblItemOfId4", "lblItemOfName4", "lblItemOfBirthday4", "lblItemOfAge4"));
   uiList.push(new UiData("lblItemOfNo5", "lblItemOfId5", "lblItemOfName5", "lblItemOfBirthday5", "lblItemOfAge5"));
-}
-
-function calculateAge(dtmBirthday, dtmToday) {
-  const today = new Date(dtmToday);
-  const birthDate = new Date(dtmBirthday);
-
-  //selisih tahun
-  let age = today.getFullYear() - birthDate.getFullYear();
-
-  //selisih bulan
-  const monthDifference = today.getMonth() - birthDate.getMonth();
-
-  if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-
-  return age;
 }
 
 Date.prototype.ToString = function () {
@@ -189,8 +187,8 @@ function NewDate(year, month, date) {
 function DoInitialize() {
   InitializeData();
   InitializeUI();
+  // Panggil displayData agar data ditampilkan saat halaman dimuat di halaman 1
   displayData();
-  btnFirst_Click();
 }
 
 ///////////////////////////
@@ -199,39 +197,32 @@ function DoInitialize() {
 ///////////////////////////
 
 function displayData() {
-  // 1. Hitung Total Halaman (untuk membatasi tombol Next/Last)
   const totalPages = Math.ceil(employeeList.length / itemsPerPage);
 
-  // 2. Tentukan Indeks Mulai
-  // Ini adalah indeks pertama data di employeeList yang akan ditampilkan di halaman saat ini.
-  // Contoh: Halaman 1 -> (1-1)*5 = 0. Halaman 2 -> (2-1)*5 = 5.
+  // Pastikan currentPage tidak melebihi batas (ini mencegah error setelah penghapusan data)
+  if (currentPage > totalPages && totalPages > 0) {
+    currentPage = totalPages;
+  }
+
   const startIndex = (currentPage - 1) * itemsPerPage;
 
-  // 3. Loop Melalui Elemen UI (uiList selalu berisi 5 referensi baris HTML)
   for (let i = 0; i < uiList.length; i++) {
-    // dataIndex adalah indeks aktual data di employeeList yang akan diisi ke baris ke-i (index i)
     const dataIndex = startIndex + i;
-    const uiElement = uiList[i]; // Ambil objek yang menyimpan referensi ke <td> HTML untuk baris ini
+    const uiElement = uiList[i];
 
-    // 4. Cek apakah indeks data masih valid (ada data karyawan di indeks tersebut?)
     if (dataIndex < employeeList.length) {
-      // --- Data ADA: Isi Baris ---
+      // Data ada, tampilkan
       const employee = employeeList[dataIndex];
-
-      // Hitung nomor urut dan usia
-      const no = dataIndex + 1; // Nomor urut di tabel (selalu dimulai dari 1)
+      const no = dataIndex + 1;
       const age = calculateAge(employee.dtmBirthday, dtmToday);
 
-      // Masukkan data ke elemen HTML
       uiElement.lblNo.innerHTML = no.toString();
       uiElement.lblId.innerHTML = employee.szId;
       uiElement.lblName.innerHTML = employee.szName;
-      // Gunakan fungsi ToString() yang sudah Anda buat untuk format tanggal
       uiElement.lblBirthday.innerHTML = employee.dtmBirthday.ToString();
       uiElement.lblAge.innerHTML = age.toString();
     } else {
-      // --- Data TIDAK ADA: Kosongkan Baris ---
-      // Ini terjadi di halaman terakhir jika jumlah data tidak pas 5
+      // Data tidak ada, kosongkan baris
       uiElement.lblNo.innerHTML = "&nbsp;";
       uiElement.lblId.innerHTML = "&nbsp;";
       uiElement.lblName.innerHTML = "&nbsp;";
@@ -240,29 +231,69 @@ function displayData() {
     }
   }
 }
-function btnNext_Click() {
-  // Hitung total halaman agar kita tahu batas maksimal
-  const totalPages = Math.ceil(employeeList.length / itemsPerPage);
 
-  // Cek: Apakah halaman saat ini BUKAN halaman terakhir?
-  if (currentPage < totalPages) {
-    currentPage++; // Naikkan nomor halaman
-    displayData(); // Tampilkan data untuk halaman baru
-  }
-  // Jika sudah di halaman terakhir, tidak terjadi apa-apa
-}
-function btnPrevious_Click() {
-  // Cek: Apakah halaman saat ini BUKAN halaman pertama (yaitu lebih besar dari 1)?
-  if (currentPage > 1) {
-    currentPage--; // Turunkan nomor halaman
-    displayData(); // Tampilkan data untuk halaman baru
-  }
-  // Jika sudah di halaman 1, tidak terjadi apa-apa
-}
 function btnFirst_Click() {
-  
+  if (currentPage !== 1) {
+    currentPage = 1;
+    displayData();
+  }
 }
+
+function btnPreviousPage_Click() {
+  if (currentPage === 1) return;
+
+  const targetPage = currentPage - 5;
+
+  if (targetPage >= 1) {
+    currentPage = targetPage;
+  } else {
+    currentPage = 1;
+  }
+
+  displayData();
+}
+
+function btnPrevious_Click() {
+  if (currentPage > 1) {
+    currentPage--;
+    displayData();
+  }
+}
+
+function btnNext_Click() {
+  const totalPages = Math.ceil(employeeList.length / itemsPerPage);
+  if (currentPage < totalPages) {
+    currentPage++;
+    displayData();
+  }
+}
+
+function btnNextPage_Click() {
+  const totalPages = Math.ceil(employeeList.length / itemsPerPage);
+  if (totalPages <= 1) return;
+
+  const targetPage = currentPage + 5;
+
+  if (targetPage <= totalPages) {
+    currentPage = targetPage;
+  } else {
+    currentPage = totalPages;
+  }
+
+  displayData();
+}
+
+function btnLast_Click() {
+  const totalPages = Math.ceil(employeeList.length / itemsPerPage);
+  if (totalPages > 0 && currentPage !== totalPages) {
+    currentPage = totalPages;
+    displayData();
+  }
+}
+
 // NOTE : YOU CAN CREATE OTHER FUNCTION OR VARIABLE HERE
+// (calculateAge function is placed above)
+
 ///////////////////////////
-//         END           //
+//          END          //
 ///////////////////////////
